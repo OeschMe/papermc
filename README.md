@@ -3,7 +3,8 @@ This is forked Linux Docker image for the PaperMC Minecraft server. Original wor
 
 PaperMC is an optimized Minecraft server with plugin support (Bukkit, Spigot, Sponge, etc.). This image provides a basic PaperMC server. All customizations are left to the user.
 
-Get the image: https://docker.io/oeschme/papermc:latest
+DockerHub repo: https://hub.docker.com/repository/docker/oeschme/papermc/general
+Get the image: docker.io/oeschme/papermc:latest
 
 # Usage
 For full documentation see https://hub.docker.com/r/phyremaster/papermc
