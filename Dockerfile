@@ -17,7 +17,7 @@ ENV MC_VERSION="latest" \
 COPY ./paper.sh .
 RUN apk update
 RUN apk add libstdc++
-RUN apk add openjdk23-jre
+RUN apk add openjdk25-jre
 RUN apk add bash
 RUN apk add wget
 RUN apk add jq
