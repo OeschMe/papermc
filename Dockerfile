@@ -1,7 +1,9 @@
 
 # This is a fork from phyremaster/papermc
 # V1.0.1 fixes PaperMC api path
-# V1.0.2 fixesd MC_RAM_MIN not reading properly
+# V1.0.2 fixed MC_RAM_MIN not reading properly
+# V1.0.3 Changed openjdk from 12 to 23
+# V1.0.4 Changed openjdk from 23 to 25 and fixed PaperMC API endpoint (v2 => v3)
 
 # Added udev-lib for OSHI
 
