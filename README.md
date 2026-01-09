@@ -28,7 +28,7 @@ For full documentation see https://hub.docker.com/r/phyremaster/papermc
 * 1.0.2
   * Fixed .sh file not reading ```MC_RAM_MIN``` properly
 * 1.0.3
-  * Changed openjdk from 12 to 23
+  * Changed openjdk from 21 to 23
 * 1.0.4
   * Upated Java to JDK25
   * Updated PaperMC API to v3 (v2 is deprecated)
