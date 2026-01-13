@@ -1,9 +1,11 @@
 # PaperMC Docker
-This is forked Linux Docker image for the PaperMC Minecraft server. Original work done by [phyremaster](https://hub.docker.com/u/phyremaster)
+This is forked Linux Docker image for the PaperMC Minecraft server. Originally based on work done by [phyremaster](https://hub.docker.com/u/phyremaster) but since fully rewritten
 
 PaperMC is an optimized Minecraft server with plugin support (Bukkit, Spigot, Sponge, etc.). This image provides a basic PaperMC server. All customizations are left to the user.
 
-DockerHub repo: https://hub.docker.com/r/oeschme/papermc
+DockerHub repo: https://hub.docker.com/r/oeschme/papermc 
+
+GitHub repo: https://github.com/OeschMe/papermc
 
 Get the image: docker.io/oeschme/papermc:latest
 
@@ -17,8 +19,9 @@ For full documentation see https://hub.docker.com/r/phyremaster/papermc
 * Added ENV variable ```MC_RAM_MIN``` for setting minimum RAM. 
   * If ```MC_RAM_MIN``` is not defined ```MC_RAM``` will be used as min and max RAM amount _(this is how phyremasters version works)_.
   * If ```MC_RAM``` is not defined, ```MC_RAM_MIN``` will also be ignored
+* V1.1.0 is fully rewritten, since PaperMC API had structure changes and V2 was dropped
 
-# Changelog
+# Changelog (tags)
 * 1.0.0 Initial release
   * Doesn't work with current version of PaperMC repo, works only with manual JAR file downloads.
 * 1.0.1 
