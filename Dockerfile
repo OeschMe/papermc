@@ -14,7 +14,8 @@ ENV MC_VERSION="latest" \
     PAPER_BUILD="latest" \
     EULA="false" \
     MC_RAM="" \
-    JAVA_OPTS=""
+    JAVA_OPTS="" \
+    PAPER_UA=""
 
 COPY ./paper.sh .
 RUN apk update

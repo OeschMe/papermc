@@ -7,7 +7,7 @@ cd papermc
 : "${PAPER_BUILD:=latest}"
 : "${PAPER_CHANNEL:=STABLE}"
 : "${PAPER_PROJECT:=paper}"
-: "${PAPER_UA:=oeschme-docker/1.0}"
+: "${PAPER_UA:=oeschme-docker/1.0 (devnull@oesch.me)}"
 
 MC_VERSION="${MC_VERSION,,}"
 PAPER_BUILD="${PAPER_BUILD,,}"
