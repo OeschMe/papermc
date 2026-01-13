@@ -32,3 +32,5 @@ For full documentation see https://hub.docker.com/r/phyremaster/papermc
 * 1.0.4
   * Upated Java to JDK25
   * Updated PaperMC API to v3 (v2 is deprecated)
+* 1.0.5
+  * Fixed API URL
