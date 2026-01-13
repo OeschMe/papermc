@@ -21,7 +21,7 @@ RUN apk update
 RUN apk add libstdc++
 RUN apk add openjdk25-jre
 RUN apk add bash
-RUN apk add wget
+RUN apk add curl
 RUN apk add jq
 RUN apk add eudev udev-init-scripts
 RUN apk add openrc 
