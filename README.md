@@ -34,3 +34,5 @@ For full documentation see https://hub.docker.com/r/phyremaster/papermc
   * Updated PaperMC API to v3 (v2 is deprecated)
 * 1.0.5
   * Fixed API URL
+* 1.1.0
+  * Full rewrite of the script, API structure was changed
