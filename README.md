@@ -7,8 +7,6 @@ DockerHub repo: https://hub.docker.com/r/oeschme/papermc
 
 GitHub repo: https://github.com/OeschMe/papermc
 
-Get the image: docker.io/oeschme/papermc:latest
-
 # Usage
 For full documentation see https://hub.docker.com/r/phyremaster/papermc
 
