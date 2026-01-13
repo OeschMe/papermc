@@ -27,10 +27,54 @@ curl_json() {
 }
 
 die_api_if_error() {
-  if echo "$1" | jq -e '.ok == false' >/dev/null 2>&1; then
+  if echo "$1" | jq -e 'type=="object" and .ok == false' >/dev/null 2>&1; then
     echo "API error: $(echo "$1" | jq -r '.message // "Unknown error"')" >&2
     exit 1
   fi
+}
+
+build_list_jq='
+  (if type=="array" then .
+   elif type=="object" and has("builds") then .builds
+   elif type=="object" and has("data") then .data
+   else []
+   end)
+'
+
+get_latest_for_channel() {
+  # args: json channel
+  local json="$1"
+  local ch="$2"
+
+  echo "$json" | jq -r --arg ch "$ch" "
+    first( $build_list_jq[]?
+      | select(type==\"object\" and .channel == \$ch)
+      | [
+          (.downloads[\"server:default\"].url // \"\"),
+          (.downloads[\"server:default\"].name // \"\"),
+          (.downloads[\"server:default\"].checksums.sha256 // \"\"),
+          ((.id // .build // \"\")|tostring)
+        ] | @tsv
+    ) // \"\"
+  "
+}
+
+get_specific_build() {
+  # args: json build_id
+  local json="$1"
+  local id="$2"
+
+  echo "$json" | jq -r --arg id "$id" "
+    first( $build_list_jq[]?
+      | select(type==\"object\" and ((.id // .build // \"\")|tostring) == \$id)
+      | [
+          (.downloads[\"server:default\"].url // \"\"),
+          (.downloads[\"server:default\"].name // \"\"),
+          (.downloads[\"server:default\"].checksums.sha256 // \"\"),
+          ((.id // .build // \"\")|tostring)
+        ] | @tsv
+    ) // \"\"
+  "
 }
 
 if [[ "$MC_VERSION" == "latest" ]]; then
@@ -47,36 +91,29 @@ download_name=""
 download_sha256=""
 
 if [[ "$PAPER_BUILD" == "latest" ]]; then
-  download_url="$(echo "$builds_json" | jq -r --arg ch "$PAPER_CHANNEL" \
-    'first(.[] | select(.channel == $ch) | .downloads["server:default"].url) // "null"')"
-  download_name="$(echo "$builds_json" | jq -r --arg ch "$PAPER_CHANNEL" \
-    'first(.[] | select(.channel == $ch) | .downloads["server:default"].name) // "null"')"
-  download_sha256="$(echo "$builds_json" | jq -r --arg ch "$PAPER_CHANNEL" \
-    'first(.[] | select(.channel == $ch) | .downloads["server:default"].checksums.sha256) // "null"')"
+  row="$(get_latest_for_channel "$builds_json" "$PAPER_CHANNEL" || true)"
 
-  if [[ "$download_url" == "null" || -z "$download_url" ]]; then
+  if [[ -n "${row:-}" ]]; then
+    IFS=$'\t' read -r download_url download_name download_sha256 PAPER_BUILD <<<"$row"
+  fi
+
+  if [[ -z "${download_url:-}" ]]; then
     echo "No ${PAPER_CHANNEL} build found for MC ${MC_VERSION}. Searching newer versions for a ${PAPER_CHANNEL} build..." >&2
 
     versions_json="$(curl_json "${API_BASE}")"
     die_api_if_error "$versions_json"
-
     mapfile -t versions < <(echo "$versions_json" | jq -r '.versions | to_entries[] | .value[]' | sort -V -r)
 
     found="false"
     for ver in "${versions[@]}"; do
-      ver_builds="$(curl_json "${API_BASE}/versions/${ver}/builds")"
-      die_api_if_error "$ver_builds"
+      ver_builds_json="$(curl_json "${API_BASE}/versions/${ver}/builds")"
+      die_api_if_error "$ver_builds_json"
 
-      url="$(echo "$ver_builds" | jq -r --arg ch "$PAPER_CHANNEL" \
-        'first(.[] | select(.channel == $ch) | .downloads["server:default"].url) // "null"')"
-      if [[ "$url" != "null" && -n "$url" ]]; then
+      row="$(get_latest_for_channel "$ver_builds_json" "$PAPER_CHANNEL" || true)"
+      if [[ -n "${row:-}" ]]; then
+        IFS=$'\t' read -r download_url download_name download_sha256 PAPER_BUILD <<<"$row"
         MC_VERSION="$ver"
-        builds_json="$ver_builds"
-        download_url="$url"
-        download_name="$(echo "$ver_builds" | jq -r --arg ch "$PAPER_CHANNEL" \
-          'first(.[] | select(.channel == $ch) | .downloads["server:default"].name) // "null"')"
-        download_sha256="$(echo "$ver_builds" | jq -r --arg ch "$PAPER_CHANNEL" \
-          'first(.[] | select(.channel == $ch) | .downloads["server:default"].checksums.sha256) // "null"')"
+        builds_json="$ver_builds_json"
         found="true"
         break
       fi
@@ -87,27 +124,27 @@ if [[ "$PAPER_BUILD" == "latest" ]]; then
       exit 1
     fi
   fi
-
-  PAPER_BUILD="$(echo "$builds_json" | jq -r --arg ch "$PAPER_CHANNEL" \
-    'first(.[] | select(.channel == $ch) | .id)')"
 else
-  download_url="$(echo "$builds_json" | jq -r --arg id "$PAPER_BUILD" \
-    'first(.[] | (.id|tostring) == $id | .downloads["server:default"].url) // "null"')"
-  download_name="$(echo "$builds_json" | jq -r --arg id "$PAPER_BUILD" \
-    'first(.[] | (.id|tostring) == $id | .downloads["server:default"].name) // "null"')"
-  download_sha256="$(echo "$builds_json" | jq -r --arg id "$PAPER_BUILD" \
-    'first(.[] | (.id|tostring) == $id | .downloads["server:default"].checksums.sha256) // "null"')"
+  row="$(get_specific_build "$builds_json" "$PAPER_BUILD" || true)"
+  if [[ -n "${row:-}" ]]; then
+    IFS=$'\t' read -r download_url download_name download_sha256 PAPER_BUILD <<<"$row"
+  fi
 
-  if [[ "$download_url" == "null" || -z "$download_url" ]]; then
+  if [[ -z "${download_url:-}" ]]; then
     echo "Build ${PAPER_BUILD} not found for MC ${MC_VERSION}." >&2
     exit 1
   fi
 fi
 
+if [[ -z "${download_url:-}" ]]; then
+  echo "Could not resolve a download URL (mc=${MC_VERSION}, channel=${PAPER_CHANNEL}, build=${PAPER_BUILD})." >&2
+  exit 1
+fi
+
 JAR_NAME="paper-${MC_VERSION}-${PAPER_BUILD}.jar"
 
 should_download="true"
-if [[ -f "$JAR_NAME" && "$download_sha256" != "null" && -n "$download_sha256" && $(command -v sha256sum >/dev/null 2>&1; echo $?) -eq 0 ]]; then
+if [[ -f "$JAR_NAME" && -n "${download_sha256:-}" ]] && command -v sha256sum >/dev/null 2>&1; then
   local_sha="$(sha256sum "$JAR_NAME" | awk '{print $1}')"
   if [[ "$local_sha" == "$download_sha256" ]]; then
     should_download="false"
@@ -119,7 +156,7 @@ if [[ "$should_download" == "true" ]]; then
   echo "Downloading ${download_name:-$JAR_NAME} (MC ${MC_VERSION}, build ${PAPER_BUILD}, channel ${PAPER_CHANNEL})"
   curl -fL -H "User-Agent: ${PAPER_UA}" -o "$JAR_NAME" "$download_url"
 
-  if [[ "$download_sha256" != "null" && -n "$download_sha256" && $(command -v sha256sum >/dev/null 2>&1; echo $?) -eq 0 ]]; then
+  if [[ -n "${download_sha256:-}" ]] && command -v sha256sum >/dev/null 2>&1; then
     echo "${download_sha256}  ${JAR_NAME}" | sha256sum -c -
   fi
 else
