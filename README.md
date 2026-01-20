@@ -37,3 +37,5 @@ For full documentation see https://hub.docker.com/r/phyremaster/papermc
   * Fixed API URL
 * 1.1.0
   * Full rewrite of the script, API structure was changed
+* 1.1.1
+  * Fixed OSHI error and removed obsolete adds from DOCKERFILE
