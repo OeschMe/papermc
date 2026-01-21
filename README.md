@@ -13,7 +13,6 @@ For full documentation see https://hub.docker.com/r/phyremaster/papermc
 
 # Edits from phyremaster/papermc
 
-* Added ```eudev``` and ```openrc``` for OSHI support needed by some plugins in some environments.
 * Added ENV variable ```MC_RAM_MIN``` for setting minimum RAM. 
   * If ```MC_RAM_MIN``` is not defined ```MC_RAM``` will be used as min and max RAM amount _(this is how phyremasters version works)_.
   * If ```MC_RAM``` is not defined, ```MC_RAM_MIN``` will also be ignored
