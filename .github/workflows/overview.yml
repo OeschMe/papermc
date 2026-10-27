@@ -1,0 +1,17 @@
+name: Sync Docker Hub overview
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  overview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate reviewed overview
+        run: python3 tools/sync_overview.py --check
+      - name: Sync and verify public Docker Hub overview
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: python3 tools/sync_overview.py --apply
