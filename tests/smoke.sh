@@ -19,13 +19,22 @@ cleanup() {
 trap cleanup EXIT
 cat > "$settings" <<'PROPERTIES'
 online-mode=false
-level-type=minecraft:flat
 generate-structures=false
 view-distance=2
 simulation-distance=2
 max-players=1
 spawn-protection=0
 PROPERTIES
+stop_checked() {
+  docker stop --time 45 "$name" >/dev/null
+  exit_code="$(docker inspect --format '{{.State.ExitCode}}' "$name")"
+  [[ "$exit_code" == 0 || "$exit_code" == 143 ]]
+  shutdown_logs="$(docker logs "$name" 2>&1)"
+  for dimension in overworld the_nether the_end; do
+    grep -F "Halted I/O scheduler for world 'minecraft:$dimension'" <<< "$shutdown_logs"
+  done
+  grep -F 'All RegionFile I/O tasks to complete' <<< "$shutdown_logs"
+}
 docker volume create "$volume" >/dev/null
 wait_ready() {
   for ((attempt=0; attempt<120; attempt++)); do
@@ -50,10 +59,7 @@ docker create --name "$name" -i --mount "type=volume,source=$volume,target=/pape
 docker cp "$settings" "$name:/papermc/server.properties"
 docker start "$name" >/dev/null
 wait_ready
-docker stop --time 45 "$name" >/dev/null
-exit_code="$(docker inspect --format '{{.State.ExitCode}}' "$name")"
-[[ "$exit_code" == 0 || "$exit_code" == 143 ]]
-docker logs "$name" 2>&1 | grep -E 'All dimensions are saved|All chunks are saved'
+stop_checked
 docker rm "$name" >/dev/null
 # The second launch must boot the same cached target with networking unavailable.
 docker run -d -i --name "$name" --network none \
@@ -62,8 +68,5 @@ docker run -d -i --name "$name" --network none \
   -e MC_RAM=2G -e MC_RAM_MIN=512M "$image" >/dev/null
 wait_ready
 docker logs "$name" 2>&1 | grep -F 'Starting verified offline target: 26.3 build 226'
-docker stop --time 45 "$name" >/dev/null
-exit_code="$(docker inspect --format '{{.State.ExitCode}}' "$name")"
-[[ "$exit_code" == 0 || "$exit_code" == 143 ]]
-docker logs "$name" 2>&1 | grep -E 'All dimensions are saved|All chunks are saved'
+stop_checked
 echo 'Disposable boot and offline restart passed; no production resources used.'

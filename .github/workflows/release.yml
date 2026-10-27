@@ -8,8 +8,8 @@ on:
         default: '1.2.0'
         type: string
       publish_latest:
-        description: Also update latest after all tests pass
-        default: true
+        description: Also update latest after checking deployment update ownership
+        default: false
         type: boolean
 permissions:
   contents: read
