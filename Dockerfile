@@ -16,7 +16,7 @@ ENV MC_VERSION="latest" \
     PAPER_DATA_DIR="/papermc" \
     PAPER_OFFLINE="false"
 
-RUN apk add --no-cache bash ca-certificates curl jq libstdc++ openjdk25-jre eudev-libs util-linux \
+RUN apk add --no-cache bash ca-certificates curl jq libstdc++ openjdk25-jre eudev-libs flock \
     && mkdir -p /papermc
 COPY --chmod=755 paper.sh /paper.sh
 

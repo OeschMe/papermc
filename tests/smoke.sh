@@ -6,6 +6,12 @@ name="papermc-smoke-${GITHUB_RUN_ID:-$$}-${RANDOM}"
 volume="${name}-data"
 settings="$(mktemp)"
 cleanup() {
+  status=$?
+  if (( status != 0 )); then
+    echo "Smoke test failed (status $status); last container state/logs:" >&2
+    docker inspect --format '{{json .State}}' "$name" >&2 || true
+    docker logs "$name" >&2 || true
+  fi
   docker rm -f "$name" >/dev/null 2>&1 || true
   docker volume rm "$volume" >/dev/null 2>&1 || true
   rm -f -- "$settings"
