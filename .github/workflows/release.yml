@@ -1,0 +1,60 @@
+name: Publish Docker image
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag (must match the image version)
+        required: true
+        default: '1.2.0'
+        type: string
+      publish_latest:
+        description: Also update latest after all tests pass
+        default: true
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: papermc-release
+  cancel-in-progress: false
+jobs:
+  tests:
+    uses: ./.github/workflows/ci.yml
+  publish:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release identity
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]
+          grep -F "org.opencontainers.image.version=\"$VERSION\"" Dockerfile
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: oeschme
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Select image tags
+        id: tags
+        env:
+          VERSION: ${{ inputs.version }}
+          PUBLISH_LATEST: ${{ inputs.publish_latest }}
+        run: |
+          echo "tags<<EOF" >> "$GITHUB_OUTPUT"
+          echo "oeschme/papermc:$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$PUBLISH_LATEST" == true ]]; then
+            echo 'oeschme/papermc:latest' >> "$GITHUB_OUTPUT"
+          fi
+          echo 'EOF' >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: org.opencontainers.image.revision=${{ github.sha }}
+          provenance: true
+          sbom: true

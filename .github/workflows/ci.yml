@@ -1,0 +1,35 @@
+name: Image checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test tools
+        run: sudo apt-get update -qq && sudo apt-get install -y jq shellcheck
+      - name: Shell validation
+        run: bash -n paper.sh && shellcheck paper.sh tests/smoke.sh
+      - name: Hermetic startup tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Build image locally
+        run: docker build --pull -t papermc:test .
+      - name: Check Java and rejected default EULA
+        run: |
+          docker run --rm papermc:test java -version 2>&1 | grep '25[.]'
+          if docker run --rm --network none papermc:test; then
+            echo 'Expected EULA=false to refuse startup' >&2
+            exit 1
+          fi
+      - name: Real disposable Paper boot, stop and offline restart
+        run: bash tests/smoke.sh papermc:test

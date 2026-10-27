@@ -1,32 +1,26 @@
+FROM alpine:3.23
 
-# This is a fork from phyremaster/papermc
-# V1.0.1 fixes PaperMC api path
-# V1.0.2 fixed MC_RAM_MIN not reading properly
-# V1.0.3 Changed openjdk from 12 to 23
-# V1.0.4 Changed openjdk from 23 to 25 and fixed PaperMC API endpoint (v2 => v3)
-# V1.1.0 Rewrote the paper.sh
-# V1.1.1 Fixing the OSHI errors
-
-FROM alpine:latest
+LABEL org.opencontainers.image.title="PaperMC Docker" \
+      org.opencontainers.image.source="https://github.com/OeschMe/papermc" \
+      org.opencontainers.image.version="1.2.0"
 
 ENV MC_VERSION="latest" \
     PAPER_BUILD="latest" \
+    PAPER_CHANNEL="STABLE" \
+    PAPER_PROJECT="paper" \
     EULA="false" \
     MC_RAM="" \
+    MC_RAM_MIN="" \
     JAVA_OPTS="" \
-    PAPER_UA=""
+    PAPER_UA="oeschme-papermc/1.2.0 (https://github.com/OeschMe/papermc)" \
+    PAPER_DATA_DIR="/papermc" \
+    PAPER_OFFLINE="false"
 
-COPY ./paper.sh .
-
-RUN apk add --no-cache \
-    bash curl jq \
-    libstdc++ \
-    openjdk25-jre \
-    eudev-libs
-
-RUN mkdir /papermc
+RUN apk add --no-cache bash ca-certificates curl jq libstdc++ openjdk25-jre eudev-libs util-linux \
+    && mkdir -p /papermc
+COPY --chmod=755 paper.sh /paper.sh
 
 EXPOSE 25565/tcp
-VOLUME /papermc
-
-CMD ["bash", "./paper.sh"]
+VOLUME ["/papermc"]
+STOPSIGNAL SIGTERM
+CMD ["bash", "/paper.sh"]
