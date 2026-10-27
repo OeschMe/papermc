@@ -9,7 +9,7 @@ import urllib.request
 
 BASE = "https://hub.docker.com"
 REPOSITORY = "/v2/repositories/oeschme/papermc/"
-DESCRIPTION = "PaperMC server image with pinned builds, verified downloads and optional offline startup."
+DESCRIPTION = "Standalone Docker image for PaperMC with pinned builds and verified downloads."
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):

@@ -1,6 +1,8 @@
 # PaperMC Docker
 
-Standalone Docker image for [PaperMC](https://papermc.io), also usable by an explicitly enrolled PaperPilot server adapter. Originally forked from [phyremaster/papermc](https://hub.docker.com/r/phyremaster/papermc); the startup script has since been rewritten.
+Standalone Docker image for [PaperMC](https://papermc.io). Originally forked from [phyremaster/papermc](https://hub.docker.com/r/phyremaster/papermc); the startup script has since been rewritten.
+
+> **PaperPilot is upcoming and work in progress.** It is a separate management tool currently in development. Its management features and integration with this image are not available yet. This image works independently and does not require PaperPilot.
 
 - Image: https://hub.docker.com/r/oeschme/papermc
 - Source: https://github.com/OeschMe/papermc
@@ -68,11 +70,11 @@ This is an integrity cache owned by the data-directory owner, not an authorizati
 
 A data-directory lock is held for the Java process lifetime, preventing two copies of this entrypoint from starting against the same directory. Java receives signals directly via `exec`; allow enough stop grace time to save worlds. Do not run two independently launched server processes against the same world.
 
-## With PaperPilot
+## Upcoming PaperPilot integration (WIP)
 
-PaperPilot is a separate manager, not a requirement or a bundled image feature. Both standalone and managed deployments use the same environment/startup contract; there is no silent auto-enrollment or management takeover.
+PaperPilot is an upcoming management tool, not a released or bundled feature of this image. The following describes the planned integration requirements, not functionality available today.
 
-The manager must first verify the **running image digest**, persisted Compose/Portainer source, mounts and supported contract. It must pin exact MC version/build/channel, preserve unrelated settings and require its own backup/approval/controller gates before recreating the enrolled server. After initial verified boot it can explicitly select offline startup for reproducible pinned restarts. Scheduled release checks never change these variables or deploy anything. This image update alone does not implement PaperPilot's adapter or authorize modifying any production deployment.
+The planned adapter will use the same environment/startup contract as standalone deployments. It must first verify the **running image digest**, persisted Compose/Portainer source, mounts and supported contract. It must pin exact MC version/build/channel, preserve unrelated settings and enforce backup, approval and controller gates before recreating an explicitly enrolled server. After an initial verified boot, it may explicitly select offline startup for reproducible pinned restarts. Planned scheduled release checks are read-only and must never deploy changes. No automatic enrollment or deployment ownership takeover is planned. Publishing this image does not implement that adapter or upgrade any running deployment.
 
 ## Testing and releases
 
